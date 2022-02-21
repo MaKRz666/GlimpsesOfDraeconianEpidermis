@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+   <script type="text/javascript">
+const patterns = ['Transversal', 'Longitudinal', 'Transversal', 'Longitudinal', 'Spots', 'Stains', 'Stains', 'Geometrical', 'Geometrical', 'Geometrical', 'Geometrical', 'Geometrical', 'Geometrical', 'Geometrical', 'Geometrical', 'Geometrical'];
+var palettes = new p5.TypedDict();
+const paletteKeys = ['Annild', 'Bobb', 'Colib', 'Elpid', 'Elpid', 'Lamiy', 'Pared', 'Pared', 'Viper', 'Xenop'];
+var pproject = 'Skins 0.71';
+var paletteName;
+var pxSize;
+
+function setup() {
+  var seeds = [];
+  for(let i = 0; i < 1; i++) {
+    seeds.push(int(random()*pow(10,12)));
+  }
+  var seed = seeds.join('');
+  randomSeed(seed);
+  noiseSeed(seed);
+  colorMode(HSB);
+  var wHeight = windowHeight;
+  createCanvas(wHeight/2, wHeight);
+  noStroke();
+  initColors();
+  initPalettes();
+  var palette = selectRandomPalette();
+  var pattern = generateRandomPattern(palette, true);
+  if (pattern.flipped) {    
+    translate(width, 0);
+    scale(-1, 1);
+  }
+  textSize(0.025*width);
+  text([seed, paletteName, int(pxSize*2000/height*10)/10, pattern.getPatternType(), pattern.getRenderType(), pattern.render.addScales ? (pattern.render.scaleNbVertices + 'gon, size ' + int(1000*pattern.render.scaleSize)/10 + '% (' + 100*pattern.render.scaleMissingRatio + '% missing)') : 'no scales'].join(' | '), 0.0275*width, 0.0275*width);
+}
+
+function generateRandomPattern(palette, drawPreview) {
+  var pattern;
+  var patType = random(patterns);   
+  if (patType==='Transversal') {
+    pattern = new TransversalPattern(palette, palette.length);
+  } else if (patType==='Longitudinal') {
+    pattern = new LongitudinalPattern(palette, int(random(2, palette.length+1)));
+  } else if (patType==='Stains') {
+    pattern = new StainsPattern(palette, int(random(2, palette.length+1)));
+  } else if (patType==='Spots') {
+    if (random(0, 1) > 0.51)
+      pattern = new SpotsPattern(palette);
+    else
+      pattern = new SpotsRandomPattern(palette);
+  } else if (patType==='Geometrical') {
+    pattern = new GeometricalPattern(palette);
+  }
+  var mode = (patType==='Spots' || (random(0, 1) > 0.67 && (patType === 'Geometrical' || patType === 'Transversal'))) ? 'Repeat' : random(0, 1) > 0.6 ? 'VerticalRepeat' : 'Stretch';
+  pxSize = max(8, randomGaussian(12, 5))*height/2000;
+  var output = pattern.transform(width, height, pxSize, pxSize, mode, drawPreview, 0, 0);
+  return pattern;
+}
+
+function selectRandomPalette() {
+  var keysPool = [];
+  for (var k = 0; k<paletteKeys.length; k++)
+    for (var c = 0; c<palettes.get(paletteKeys[k]).length; c++)
+      keysPool.push(paletteKeys[k]);
+  var key = random(keysPool);
+  var palettesPool = palettes.get(key);
+  var idx = int(random(palettesPool.length));
+  paletteName = getPaletteName(key, idx);
+  return palettesPool[idx];  
+}
+
+function getPaletteName(prefix, idx) {
+  var suffixes = ['a', 'i', 'shi', 'z', 'ka', 'o', 'e', 'ud'];
+  var charToShave = [1, 3, 2, 1, 2, 0, 2, 3];
+  return prefix.substring(0, prefix.length - charToShave[idx]) + suffixes[idx];
+}
+
+function initColors() {
+  smokyBlack = color(355, 32, 8);
+  heatWave = color(5, 74, 43);
+  cocoaBean = color(4, 69, 28);
+  tiri = color(20, 17, 28);
+  tom = color(5, 12, 59);
+  rootBeer = color(21, 60, 52);
+  biscuitBrown = color(21, 45, 74);
+  cumin = color(19, 77, 60);
+  indianTan = color(23, 59, 30);
+  sandDune = color(19, 26, 53);
+  spanishOrange = color(25, 98, 92);
+  coffeeBean = color(7, 54, 17);
+  cioccolato = color(20, 79, 35);
+  burntUmber = color(22, 92, 63);
+  englishRed = color(13, 94, 79);
+  brickRed = color(8, 94, 56);
+  groundbreaker = color(34, 32, 37);
+  soul = color(34, 28, 74);
+  frenchPuce = color(5, 88, 30);
+  secretRoad = color(30, 40, 63);
+  coyoteBrown = color(31, 55, 52);
+  mushroom = color(28, 28, 73);
+  darkBrown = color(32, 67, 36);
+  veryBrown = color(31, 51, 12);
+  celery = color(67, 56, 73);
+  wasabi = color(75, 67, 56);
+  greenSmoke = color(69, 41, 66);
+  pacifika = color(72, 66, 41);
+  terrain = color(59, 11, 69);
+  russet = color(20, 93, 65);
+  hairyHeath = color(18, 84, 43);
+  ironbark = color(14, 73, 26);
+  chocolate = color(27, 89, 83);
+  metallicBronze = color(37, 79, 28);
+  brownishGrey = color(36, 29, 51);
+  millbrook = color(48, 19, 34);
+  jungleGreen = color(35, 45, 14);
+  chathamsBlue = color(204, 49, 46);
+  butteredRum = color(39, 68, 60);
+  blackout = color(14, 34, 13);
+  midGrey = color(261, 12, 43);
+  eightLemonGrass = color(78, 4, 80);
+  grape = color(258, 17, 29);
+  sapGreen = color(86, 83, 56);
+  greenLeaf = color(88, 84, 42);
+  clover = color(88, 73, 30);
+  crossCountry = color(88, 43, 54);
+  lightMossGreen = color(84, 46, 75);
+  turkishRose = color(355, 29, 61);
+  pinkishGrey = color(357, 15, 79);
+  jarrahTree = color(3, 44, 35);
+  paco = color(21, 33, 30);
+  ivoryBlack = color(24, 27, 18);
+  romanCoffee = color(27, 33, 49);
+  bach = color(86, 27, 57);
+  lemonGrass = color(69, 13, 60);
+  memphisBelle = color(354, 74, 83);
+  auburn = color(356, 80, 64);
+  crownOfThorns = color(359, 75, 47);
+  fuzzyWuzzy = color(357, 52, 83);
+  axis = color(31, 33, 49);
+  spark = color(27, 36, 41);
+  treasureChest = color(38, 29, 63);
+  bronze = color(25, 37, 29);
+  putty = color(42, 26, 75);
+  pitchBlack = color(356, 8, 19);
+  goldDrop = color(21, 77, 86);
+  vindaloo = color(20, 81, 62);
+  vanDykeBrown = color(19, 87, 39);
+  amethystSmoke = color(254, 15, 67);
+  tripleMassala = color(46, 19, 25);
+  dolphin = color(283, 10, 45);
+  halfGravel = color(76, 10, 39);
+  monkey = color(25, 26, 22);
+  grey = color(34, 3, 57);
+  chicago = color(23, 9, 38);
+  quarterSilverChalice = color(71, 2, 78);
+  bitter = color(78, 15, 54);
+  santasGrey = color(225, 13, 72);
+  thistle = color(295, 13, 54);
+  windswept = color(348, 3, 26);
+  quarterMassala = color(28, 6, 45);
+  blackMagic = color(35, 33, 18);
+  halfMountainMist = color(49, 3, 71);
+  halfKalgoorieSands = color(25, 36, 77);
+  voltage = color(245, 7, 60);
+  anzac = color(34, 68, 78);
+  rustyNail = color(32, 65, 56);
+  waikawaGrey = color(224, 43, 63);
+  midwinterMist = color(193, 3, 83);
+  sunflower = color(53, 87, 87);
+  bunker = color(215, 8, 18);
+  grey = color(207, 22, 9);
+  laser = color(49, 51, 78);
+  black = color(128, 5, 14);
+  windTalker = color(214, 31, 36);
+  chambray = color(215, 43, 48);
+  greyishBlue = color(207, 40, 64);
+  frenchPass = color(194, 29, 88);
+  vividRedTangelo = color(18, 81, 88);
+  babyShitGreen = color(69, 83, 57);
+  crete = color(62, 66, 45);
+  tripleDrought = color(37, 33, 64);
+  greyGreen = color(79, 35, 33);
+  rangoonGreen = color(91, 30, 11);
+  ipanema = color(53, 68, 84);
+  flourish = color(62, 44, 73);
+  wanderlust = color(58, 55, 52);
+  darkTan = color(24, 51, 57);
+  spice = color(22, 57, 43);
+  beaver = color(21, 32, 64);
+  brownDerby = color(21, 71, 28);
+  blanchedPink = color(12, 11, 80);
+  bullwhip = color(40, 60, 55);
+  afghanTan = color(57, 87, 52);
+  lemonGinger = color(47, 71, 61);
+  tripleNullarbor = color(32, 43, 47);
+  japaneseIndigo = color(188, 42, 29);
+  bismark = color(199, 35, 50);
+  nepal = color(200, 20, 72);
+  tulipTree = color(42, 74, 88);
+  grey = color(180, 37, 8);
+  toastedGreen = color(38, 52, 40);
+  doublePerfectTaupe = color(26, 16, 59);
+  goldDust = color(37, 53, 60);
+  abbey = color(213, 15, 33);
+  marsOrange = color(22, 81, 60);
+  rawSienna = color(24, 59, 85);
+  bokaraGrey = color(25, 75, 10);
+  alamo = color(28, 45, 68);
+  halfDoeSkin = color(37, 23, 74);
+  outerSpace = color(179, 9, 31);
+  tripleDelta = color(70, 5, 47);
+  towerGrey = color(193, 13, 75);
+  earthstone = color(56, 24, 69);
+  danube = color(215, 51, 75);
+  jordyBlue = color(212, 44, 90);
+  astronaut = color(219, 45, 47);
+  manatee = color(225, 14, 64);
+  myrtleGreen = color(178, 61, 44);
+  moderateCyan = color(181, 67, 65);
+  nordic = color(180, 59, 23);
+  chi = color(181, 18, 71);
+  congoBrown = color(1, 42, 37);
+  uglyGreen = color(73, 92, 60);
+  fernFrond = color(70, 88, 42);
+  darkOlive = color(65, 91, 26);
+  charisma = color(23, 73, 50);
+  halfBarbecue = color(354, 13, 25);
+  donJuan = color(348, 14, 37);
+  blackOlive = color(73, 47, 19);
+  darkBrownTangelo = color(27, 44, 51);
+  halfKalgoorieSands = color(27, 38, 76);
+  ash = color(50, 12, 75);
+  timberwolf = color(41, 4, 87);
+  lemonGrass = color(63, 9, 61);
+  doubleHillary = color(55, 31, 58);
+  birdcage = color(235, 18, 70);
+  darkGrayishOlive = color(52, 30, 37);
+  yellowishBlack = color(38, 15, 12);
+  bombay = color(269, 4, 72);
+  grayishChartreuseGreen = color(90, 25, 64);
+  bathurst = color(77, 42, 26);
+  axolotl = color(89, 29, 46);
+  armyGreen = color(69, 58, 33);
+  crossCountry = color(74, 47, 51);
+  moderateOlive = color(62, 54, 70);
+  voltage = color(278, 5, 59);
+  jumbo = color(266, 7, 49);
+  reddishBrownishGrey = color(334, 6, 35);
+  blackSheep = color(349, 8, 24);
+  portica = color(51, 65, 94);
+  rust = color(20, 98, 68);
+  dixie = color(37, 94, 89);
+  cocoaBrown = color(358, 29, 18);
+  stingray = color(7, 28, 29);
+  jumbo = color(280, 6, 51);
+  darkGrayishSapphireBlue = color(240, 18, 34);
+  cadetBlue = color(206, 49, 56);
+  licorice = color(358, 29, 12);
+  jambalaya = color(20, 72, 39);
+  maiTai = color(25, 69, 63);
+  purpleNavy = color(247, 38, 52);
+  yellowishBlack = color(33, 20, 13);
+  tripleMasala = color(37, 23, 26);
+  proton = color(61, 10, 68);
+  verdigris = color(62, 43, 35);
+  quayside = color(223, 40, 44);
+  dark = color(21, 42, 18);
+  metallicBlue = color(209, 40, 55);
+  moonstoneBlue = color(203, 40, 76);
+}
+
+function initPalettes() {
+  palettes.create('Annild', [shuffle([smokyBlack, heatWave, cocoaBean, tiri, tom, rootBeer]), [biscuitBrown, cumin, indianTan, sandDune], [spanishOrange, coffeeBean, cioccolato, burntUmber], [englishRed, brickRed, groundbreaker, soul, frenchPuce]]);
+  palettes.create('Bobb', [[secretRoad, coyoteBrown, mushroom, darkBrown, veryBrown], [celery, wasabi, greenSmoke, pacifika, terrain], [russet, hairyHeath, ironbark, chocolate], [metallicBronze, brownishGrey, millbrook, jungleGreen, chathamsBlue, butteredRum], shuffle([blackout, midGrey, eightLemonGrass, grape]), [sapGreen, greenLeaf, clover, crossCountry, lightMossGreen], [turkishRose, pinkishGrey, jarrahTree], [paco, ivoryBlack, romanCoffee, bach, lemonGrass]]);
+  palettes.create('Colib', [[memphisBelle, auburn, crownOfThorns, fuzzyWuzzy], [axis, spark, treasureChest, bronze, putty], shuffle([pitchBlack, goldDrop, vindaloo, vanDykeBrown]), shuffle([monkey, grey, chicago, quarterSilverChalice]), [bitter, santasGrey, thistle, windswept], [quarterMassala, blackMagic, halfMountainMist], [halfKalgoorieSands, voltage, anzac, rustyNail, waikawaGrey]]);
+  palettes.create('Elpid', [[midwinterMist, sunflower, bunker, grey], [laser, black, windTalker], [chambray, greyishBlue, frenchPass, vividRedTangelo], [babyShitGreen, crete, tripleDrought]]);
+  palettes.create('Lamiy', [[greyGreen, rangoonGreen, ipanema, flourish, wanderlust], [darkTan, spice, beaver, brownDerby, blanchedPink], [bullwhip, afghanTan, lemonGinger, tripleNullarbor], [japaneseIndigo, bismark, nepal, tulipTree], shuffle([grey, toastedGreen, doublePerfectTaupe, goldDust, abbey])]);
+  palettes.create('Pared', [[marsOrange, rawSienna, bokaraGrey, alamo, halfDoeSkin], [outerSpace, goldDust, tripleDelta, towerGrey, earthstone], [danube, jordyBlue, astronaut, manatee]]);
+  palettes.create('Viper', [[myrtleGreen, moderateCyan, nordic, chi, congoBrown], [uglyGreen, fernFrond, darkOlive, charisma], [halfBarbecue, donJuan, blackOlive, darkBrownTangelo, halfKalgoorieSands], [ash, timberwolf, lemonGrass, doubleHillary, birdcage, darkGrayishOlive, yellowishBlack, bombay], [grayishChartreuseGreen, bathurst, axolotl, armyGreen, crossCountry, moderateOlive], [voltage, jumbo, reddishBrownishGrey, blackSheep], [portica, rust, dixie]]);
+  palettes.create('Xenop', [shuffle([cocoaBrown, stingray, jumbo, darkGrayishSapphireBlue, cadetBlue]), shuffle([licorice, jambalaya, maiTai, purpleNavy]), shuffle([yellowishBlack, tripleMasala, proton, verdigris, quayside]), shuffle([windTalker, dark, metallicBlue, moonstoneBlue])]);
+}
+
+class Pattern {
+  constructor(palette) {
+    this.palette = palette;
+    this.pixels = [];
+    this.maxShift = randomGaussian(1.018, 0.618);
+    this.xRandomnessVol = randomGaussian(0.031, 0.003);
+    this.yRandomnessVol = randomGaussian(0.031, 0.003);
+    this.frameSize = 0.02*height;
+    this.backgroundColor = palette[0];
+    this.backgroundColor2 = color(hue(this.palette[0]), max(0,saturation(this.palette[0]) - random(3, 7)), min(random(3, 7) + brightness(this.palette[0]), 100));
+    var whichRender = random(0, 1);
+    if (whichRender < 0.2)
+      this.renderType = 'Sprinkler';
+    else if (whichRender < 0.5)
+      this.renderType = 'Scribbler';    
+    else if (whichRender < 0.9)
+      this.renderType = 'Cycloïd';
+    else if (whichRender < 1.0)
+      this.renderType = 'Ellipse';
+  }
+  
+  getNbColors() {
+    return this.nbColors;
+  }
+    
+  getRenderType() {
+    return this.renderType;
+  }
+
+  unzoomPattern() {
+    var zerosRow = [];
+    for (var j = 0; j < this.pixels[0].length + 4; j++) {
+      zerosRow.push(0);
+    }
+    var newPixels = [];
+    newPixels.push(zerosRow);
+    newPixels.push(zerosRow);
+    for (var i = 0; i < this.pixels.length; i++) {
+      var newRow = []; 
+      newRow.push(0);
+      newRow.push(0);
+      for (var j = 0; j < this.pixels[i].length; j++) {
+        newRow.push(this.pixels[i][j]);
+      }
+      newRow.push(0);
+      newRow.push(0);
+      newPixels.push(newRow);
+    }
+    newPixels.push(zerosRow);
+    newPixels.push(zerosRow);
+    this.pixels = newPixels;
+  }
+  
+  initBackground() {
+    background(this.backgroundColor);
+    let c2 = this.backgroundColor2;
+    if (random(0, 1) < 0.5) {
+      let c1 = this.backgroundColor;
+      var xB = random(0, width);
+      var yB = random(height/2, height);
+      for(let x=0; x < width + height*xB/yB; x++) {
+        var yy = (-yB/xB)*(xB - x) + yB;
+        var n = noise(x/300);
+        let newc = lerpColor(c1,c2,n);
+        stroke(newc);
+        line(x,0,0,yy);
+      }      
+    }
+    noStroke();
+  }
+  
+  initFrame() {
+    noStroke();
+    push();
+    rectMode(CORNERS);
+    var frameColorIdx = int(random(0, this.palette.length))
+    for (var i = 0; i < 67; i++) {
+      var frameColor = color((1 + randomGaussian(0, 1.618))*hue(this.palette[frameColorIdx]), (1 + randomGaussian(0, 1.618))*saturation(this.palette[frameColorIdx]), (1 + randomGaussian(0, 1.618))*brightness(this.palette[frameColorIdx]), (0.0618 + randomGaussian(0, 0.1618))*0.98);
+      fill(frameColor);
+      var thick = (0.666 + randomGaussian(0, 0.1618*2))*this.frameSize;
+      rect(0, 0, thick, height - thick);
+      rect(0, height - thick, width - thick, height);
+      rect(width - thick, thick, width, height);
+      rect(thick, 0, width, thick);  
+    }
+    pop();
+  }
+  
+  transform(w, h, pxw0, pxh0, mode, draw, x0, y0) {
+    this.flipped = false;
+    if (random(0, 1) > 0.5) {
+      translate(width, 0);
+      scale(-1, 1);
+      this.flipped = true;
+    }   
+    this.initBackground();
+    switch (this.renderType) {
+      case 'Ellipse':
+        this.render = new EllipseRender(this.xRandomnessVol, this.yRandomnessVol);
+        break;
+      case 'Rectangle':
+        this.render = new RectangleRender(this.xRandomnessVol, this.yRandomnessVol);
+        break;
+      case 'Cycloïd':
+        this.render = new CycloidRender(this.xRandomnessVol, this.yRandomnessVol);
+        break;
+      case 'Sprinkler':
+        this.render = new GaussianSprinklerRender(this.xRandomnessVol, this.yRandomnessVol);
+        break;  
+      case 'Scribbler':
+        this.render = new GaussianScribblerRender(this.xRandomnessVol, this.yRandomnessVol);
+        break;          
+    }
+    var pxh = pxh0;
+    var pxw = pxw0;
+    var nonZeroPxRatio = this.getColoredPixelsRatio();
+    var variablePxSize = true;
+    if (this.getPatternType() === 'Geometrical' && nonZeroPxRatio > 0.06) {
+      if (mode === 'Stretch') {
+        this.unzoomPattern();
+        if (random(0, 1) < 0.5) {
+          this.unzoomPattern();
+          if (random(0, 1) < 0.5) {
+            this.unzoomPattern();
+          }         
+        }
+        variablePxSize = false;
+        this.stretchAndClean(w, h, pxw, pxh);
+      } else {
+        this.stretchAndClean(random(this.pixels.length*pxw, 0.9*w), random(this.pixels[0].length*pxh, 0.9*h), 1.618*pxw, 1.618*pxh);
+      }
+    }
+
+    var output = [];
+    var colorIdxDict = createNumberDict(0, 0);
+    this.maxShift = (this.render === 'Sprinkler' || this.render === 'Scribbler') ? 0 : this.maxShift; 
+    var maxShift = this.maxShift;
+    if (mode === 'VerticalRepeat') {
+      var rptNb = random(1, 4);
+    }
+    rectMode(CENTER);
+    var n = 0;
+    var alpha = 0.98;
+    if (random(0, 1) > 0.5)
+      alpha = random(0.7, 0.99);
+    var xShiftMultiple = (random(0, 1) > 0.5 ? -1 : 1)*max(2, randomGaussian(2, 16.18));
+    var ixMax = int(w/pxw) + 1;
+    var iyMax = int(h/pxh) + 1;
+    var extraIx = int(0.2*ixMax);
+    var extraIy = int(0.2*iyMax);
+    var x = x0;
+    var y = y0;
+    for (var ix = 0; ix<ixMax + 2*extraIx; ix++) {
+      output.push([]);
+      for (var iy = 0; iy<iyMax + 2*extraIy; iy++) {
+        output[ix].push(0);
+      }
+    }
+    var changeHueAmpl = this.render.addScales ? random(0, 6.66) : random(6.18, 61.8);
+    var extraDirectionalNoise = max(-6666, min(6666, random(0, 1) > 0.95 ? randomGaussian(1618, 1618) : randomGaussian(618, 1618)));
+    var gradShiftX = random(0, 1) < 0.2 ? width/2 : randomGaussian(width/2, width/16.18);
+    var gradShiftY = random(0, 1) < 0.2 ? height/2 : randomGaussian(height/2, height/16.18);
+    var gradXY = randomGaussian(0, height/6180);
+    var gradAmpl =random(0.1, 1);
+    var shiftX = 0;
+    var shiftY = 0;
+    var paletteShuffleDone = false;
+    var okToShufflePalette = random(0, 1) > 0.5;
+    var originalPalette = [];
+    for (var p = 0; p < this.palette.length; p++) {
+      originalPalette.push(this.palette[p]);
+    }
+    var symAngleBase = randomGaussian(0, this.getPatternType() != 'Transversal' ? PI/22 : PI/11);
+    var symAngleFreq = random(0, 1) > 0.79 ? 0 : randomGaussian(0.16, 1);
+    var symNoiseVolume = random(0, 1) > 0.27 ? 0 : randomGaussian(0, 0.016);
+    var isMirror = random(0, 1) > ((this.getPatternType() === 'Geometrical' || this.getPatternType() == 'Stains') ? 0.81 : 0.93);
+    nonZeroPxRatio = this.getColoredPixelsRatio();
+    var doRoundAngle = random(0, 1) > 0.9 && (nonZeroPxRatio < 0.618 || this.getPatternType() != 'Geometrical');
+    var angleRoundingVal = doRoundAngle ? PI/int(random(3, 9)) : 0;
+    var symCenterX = floor(ixMax/2) + randomGaussian(0, ixMax/30);
+    var symCenterY = floor(iyMax/2) + randomGaussian(0, iyMax/30);
+    var symTypeY = (abs(symAngleBase) > PI/16 && random(0, 1) > 0.062) ? random(0, 1) < 0.83 ? 'CleanMobile' : 'DirtyMobile' : 'Fixed';
+    var symAngle = symAngleBase;
+    for (var iy = iyMax - 1 + 2*extraIy; iy >= 0; iy--) {
+      x = x0;
+      y = y0 + iy*pxh;
+      symCenterY = symTypeY === 'Fixed' ? symCenterY : symTypeY === 'DirtyMobile' ? height + y : iy;
+      shiftY += 1*(random(0, 1) > 0.995)*(-1*random(0, 1) > 0.1618);
+      symAngle = (noise(0, y/height/10)*symNoiseVolume + sin(y/height*PI*2*symAngleFreq))*symAngleBase;
+      if (doRoundAngle && symAngleFreq != 0)
+        symAngle = round(symAngle/angleRoundingVal)*angleRoundingVal;
+      for (var ix = int(0.7*sqrt(PI*width/pxw0/8)*exp(4*noise(0.5*0.6, 0.5*0.16)/width/8)); ix < ixMax + 2*extraIx; ix++) {
+        pxw = pxw0*(variablePxSize ? 1 + noise(x/width*0.6, y/height*0.16)*0.24*cos(4*PI*symAngleFreq*ix/(ixMax + 2*extraIx)) : 1 + 0.4*exp(-pow(ix*pxw0 + gradXY/1000*y + 7*pxw0*noise(x/width*0.6, y/height*0.16)*cos(4*PI*symAngleFreq*ix/(ixMax + 2*extraIx))-width/2, 2)/width/8));
+        x += pxw;
+        shiftX += 1*(random(0, 1) > 0.975)*(-1*random(0, 1) > 0.222);
+        var iy2 = (shiftY + 10*iyMax + (iy - symCenterY)*cos(symAngle) + (symCenterX - (isMirror ? int(ixMax/2 - abs(ix - ixMax/2)) : ix))*sin(symAngle) + symCenterY) % iyMax;//min(iyMax - 1, max(0, int((iy - symCenterY)*cos(symAngle) + (symCenterX - ix)*sin(symAngle) + symCenterY)));
+        var ix2 = (shiftX + 10*ixMax + (iy - symCenterY)*sin(symAngle) + ((isMirror ? int(ixMax/2 - abs(ix - ixMax/2)) : ix) - symCenterX)*cos(symAngle) + symCenterX) % ixMax;//min(ixMax - 1, max(0, int((iy - symCenterY)*sin(symAngle) + (ix - symCenterX)*cos(symAngle) + symCenterX)));
+        var i = 0;
+        var j = 0;
+        if (mode === 'Stretch') {
+          i = (2*this.pixels.length + int(ix2*this.pixels.length/w*pxw0)) % this.pixels.length;
+          j = (this.pixels[i].length + int(iy2*this.pixels[i].length/h*pxh)) % this.pixels[i].length;
+        } else if (mode === 'Repeat') {
+          var jj = int((iy2 + this.pixels[0].length - (1.4*h/pxh % this.pixels[0].length)/2));  
+          var ii = (ix2 + this.pixels.length*(1 + int((jj - this.pixels[0].length)/this.pixels[0].length)/xShiftMultiple) - (1.4*w/pxw0 % this.pixels.length)/2);
+          i = (this.pixels.length + int(ii % this.pixels.length)) % this.pixels.length;
+          j = jj % this.pixels[i].length;
+          if (okToShufflePalette && !paletteShuffleDone && (jj === this.pixels[i].length && random(0, 1) < 0.11 || j === 0 && random(0, 1) < 0.055)) {
+            var newOrder = [];
+            for (var c = 1; c < this.palette.length; c++)
+              newOrder.push(c);
+            shuffle(newOrder, true);
+            var newPalette = [this.palette[0]];
+            for (var c = 0; c < newOrder.length; c++)
+              newPalette.push(this.palette[newOrder[c]]);
+            this.palette = newPalette;
+            paletteShuffleDone = true;
+          } else if (okToShufflePalette && paletteShuffleDone && (jj === this.pixels[i].length && random(0, 1) < 0.11 || j === 0 && random(0, 1) < 0.055)) {
+            this.palette = originalPalette;
+            paletteShuffleDone = false;
+          }
+        } else if (mode === 'VerticalRepeat') {
+          i = (this.pixels.length + int(ix2*this.pixels.length/w*pxw0)) % this.pixels.length;
+          var jj = int(this.pixels[i].length + iy2*this.pixels[i].length/h*pxh*rptNb); 
+          j = jj % this.pixels[i].length;
+          if (okToShufflePalette && !paletteShuffleDone && (jj === this.pixels[i].length && random(0, 1) < (this.getPatternType() === 'Longitudinal' ? 0.77 : 0.11) || j === 0 && random(0, 1) < (this.getPatternType() === 'Longitudinal' ? 0.4 : 0.09))) {
+            var newOrder = [];
+            for (var c = 1; c < this.palette.length; c++)
+              newOrder.push(c);
+            shuffle(newOrder, true);
+            var newPalette = [this.palette[0]];
+            for (var c = 0; c < newOrder.length; c++)
+              newPalette.push(this.palette[newOrder[c]]);
+            this.palette = newPalette;
+            paletteShuffleDone = true;
+          } else if (okToShufflePalette && paletteShuffleDone && (jj === this.pixels[i].length && random(0, 1) < (this.getPatternType() === 'Longitudinal' ? 0.77 : 0.10) || j === 0 && random(0, 1) < (this.getPatternType() === 'Longitudinal' ? 0.39 : 0.08))) {
+            this.palette = originalPalette;
+            paletteShuffleDone = false;
+          }
+        }
+        output[ix][iy] = this.pixels[i][j];
+        if (draw) {
+          var iColor = output[min(int(w/pxw0 - 1), max(0,ix - int(randomGaussian(0, maxShift/1.618))))][min(int(h/pxh - 1), max(0,iy + shiftY - int(randomGaussian(0, maxShift/1.618))))];
+          var strokeColor;
+          if (!colorIdxDict.hasKey(iColor))
+            colorIdxDict.set(iColor, 0);
+          if (iColor > 0) {
+            strokeColor = null;
+            colorIdxDict.set(iColor, colorIdxDict.get(iColor) + 1);
+          } else
+            strokeColor = this.backgroundColor2;
+          var gradFact = gradAmpl*exp(-pow(x + noise(x/width*0.6, y/height*0.16)*0.24 + gradXY*y - gradShiftX, 2)/random(618000, 1618000));
+          var colr = color(hue(this.palette[iColor]) + changeHueAmpl*(ix + iy)/(ixMax + iyMax), max(0, -16.18*(gradFact) + saturation(this.palette[iColor])), min(100, 16.18*(gradFact) + brightness(this.palette[iColor])), alpha);
+          (this.render).render(colr, strokeColor, x + pxw/xShiftMultiple*(iy%xShiftMultiple), y, pxw, pxh, extraDirectionalNoise);
+        }
+      }
+    }
+    this.initFrame();
+    nonZeroPxRatio = this.getColoredPixelsRatio(); 
+    return output;    
+  }
+  
+  smoothenPatternDirty() {
+    var newPixels = [];
+    for (var i = 0; i < this.pixels.length; i++) {
+      var newRow = [];
+      for (var j = 0; j < this.pixels[0].length; j++) {
+        var avgValue = 0;
+        for (var e = -1; e < 2; e++) {
+          for (var f = -1; f < 2; f++) {        
+            var indexColor = (i + e === -1 || j + f === -1 || i + e === this.pixels.length || j + f === this.pixels[0].length) ? 0 : this.pixels[i + e][j + f];
+            avgValue += indexColor;
+          }
+        }
+        newRow.push(round(avgValue/9));
+      }
+      newPixels.push(newRow);
+    }
+    this.pixels = newPixels;
+  } 
+  
+  smoothenPatternClean() {
+    var newPixels = [];
+    var maxChanges = this.pixels.length*this.pixels[0].length/50;
+    for (var i = 0; i < this.pixels.length; i++) {
+      var newRow = [];
+      for (var j = 0; j < this.pixels[0].length; j++) {
+        var dico = createNumberDict(0, 0);
+        for (var e = -1; e < 2; e++) {
+          for (var f = -1; f < 2; f++) {
+            var indexColor = (i + e === -1 || j + f === -1 || i + e === this.pixels.length || j + f === this.pixels[0].length) ? 0 : this.pixels[i + e][j + f];
+            if (dico.hasKey(indexColor))
+              dico.add(indexColor, 1);
+            else
+              dico.set(indexColor, 1);
+          }
+        }
+        var maxV = dico.maxValue();
+        for(var key in dico.data) {
+          if (dico.get(key) === maxV) {
+            if (key == 0)
+              newRow.push(0);
+            else
+              newRow.push(this.pixels[i][j]);
+            break;
+          }
+        }
+      }
+      newPixels.push(newRow);
+    }
+    this.pixels = newPixels;
+  }
+  
+  getColoredPixelsRatio() {
+    var nonZeros = 0;
+    var nbCols = this.pixels.length;
+    var nbRows = this.pixels[0].length;
+    for (var i = 0; i < nbCols; i++) {
+      for (var j = 0; j < nbRows; j++) {
+        if (this.pixels[i][j] > 0)
+          nonZeros++;
+      }
+    }
+    return nonZeros/nbCols/nbRows;
+  }
+
+  getNbCorners() {
+    var nbCorners = 0;
+    var nbCols = this.pixels.length;
+    var nbRows = this.pixels[0].length;
+    for (var i = 1; i < nbCols - 1; i++) {
+      for (var j = 1; j < nbRows - 1; j++) {
+        var cornerCheck = this.pixels[i-1][j] == this.pixels[i][j] && this.pixels[i-1][j-1] == this.pixels[i][j] 
+        && this.pixels[i][j-1] == this.pixels[i][j] && this.pixels[i+1][j-1] != this.pixels[i][j] 
+        && this.pixels[i+1][j] != this.pixels[i][j] && this.pixels[i+1][j+1] != this.pixels[i][j] 
+        && this.pixels[i][j+1] != this.pixels[i][j] && this.pixels[i-1][j+1] != this.pixels[i][j];   
+        if (cornerCheck) {
+          nbCorners++;
+          continue;
+        }
+        cornerCheck = this.pixels[i-1][j] != this.pixels[i][j] && this.pixels[i-1][j-1] != this.pixels[i][j] 
+        && this.pixels[i][j-1] == this.pixels[i][j] && this.pixels[i+1][j-1] == this.pixels[i][j] 
+        && this.pixels[i+1][j] == this.pixels[i][j] && this.pixels[i+1][j+1] != this.pixels[i][j] 
+        && this.pixels[i][j+1] != this.pixels[i][j] && this.pixels[i-1][j+1] != this.pixels[i][j];   
+        if (cornerCheck) {
+          nbCorners++;
+          continue;
+        }
+        cornerCheck = this.pixels[i-1][j] != this.pixels[i][j] && this.pixels[i-1][j-1] != this.pixels[i][j] 
+        && this.pixels[i][j-1] != this.pixels[i][j] && this.pixels[i+1][j-1] != this.pixels[i][j] 
+        && this.pixels[i+1][j] == this.pixels[i][j] && this.pixels[i+1][j+1] == this.pixels[i][j] 
+        && this.pixels[i][j+1] == this.pixels[i][j] && this.pixels[i-1][j+1] != this.pixels[i][j];   
+        if (cornerCheck) {
+          nbCorners++;
+          continue;
+        }
+        cornerCheck = this.pixels[i-1][j] == this.pixels[i][j] && this.pixels[i-1][j-1] != this.pixels[i][j] 
+        && this.pixels[i][j-1] != this.pixels[i][j] && this.pixels[i+1][j-1] != this.pixels[i][j] 
+        && this.pixels[i+1][j] != this.pixels[i][j] && this.pixels[i+1][j+1] != this.pixels[i][j] 
+        && this.pixels[i][j+1] == this.pixels[i][j] && this.pixels[i-1][j+1] == this.pixels[i][j];   
+        if (cornerCheck) {
+          nbCorners++;
+          continue;
+        }
+      }
+    }
+    return nbCorners;
+  } 
+  
+  stretchAndClean(w, h, pxw, pxh) {
+    var newPixels = [];
+    var ixMax = int(w/pxw);
+    var iyMax = int(h/pxh);
+    for (var ix = 0; ix < ixMax; ix++) {
+      var newRow = [];
+      for (var iy = 0; iy < iyMax; iy++) {
+        var i = int(ix*this.pixels.length/w*pxw);
+        var j = int(iy*this.pixels[i].length/h*pxh);
+        newRow.push(this.pixels[i][j]);
+      }
+      newPixels.push(newRow);
+    }
+    this.pixels = newPixels;
+    for (var t = 0; t < 3; t++) {
+      if (this.getNbCorners() > 5 && this.getColoredPixelsRatio() > 0.09 && random(0, 1) < 0.05) {
+        this.smoothenPatternClean();
+      }
+    }
+    if (random(0, 1) < 0.5) { 
+      this.smoothenPatternDirty();
+    }
+  }
+}
+
+class TransversalPattern extends Pattern {
+  constructor(palette, nbColors) {
+    super(palette);
+    this.nbColors = min(palette.length, nbColors);
+    this.generatePattern();
+  }
+  
+  getPatternType() {
+    return 'Transversal';
+  }
+  
+  generatePattern() {
+    this.pixels.push([]);
+    var nbPxByColor = 0.01618*height;
+    var sizeMax = 1/(this.nbColors-1);
+    var sizeMin = sizeMax/1.618;
+    var startPos = 0;
+    var idxPool = [];
+    for (var i = 1; i<this.nbColors; i++)
+      idxPool.push(i);
+    for (var i = 0; i<this.nbColors-1; i++) {
+      var endPos = random(startPos, min(1, startPos + sizeMax));
+      for (var j = 0; j < int(nbPxByColor * (endPos - startPos)); j++) {
+        this.pixels[0].push(0);
+      }
+      startPos = endPos;
+      endPos = random(min(1, startPos + sizeMin), min(1, startPos + sizeMax));
+      var draw = int(random(idxPool.length));
+      for (var j = 0; j < int(nbPxByColor * (endPos - startPos)); j++) {      
+        this.pixels[0].push(idxPool[draw]);
+      }
+      idxPool.splice(draw, 1);
+      startPos = endPos;
+    }
+    var nbPxToFill = 1;
+    for (var i = 0; i<this.pixels[0].length; i++) {
+      if (this.pixels[0][i]>0)
+        i=this.pixels[0].length;
+      else
+        nbPxToFill++
+    }
+    for (var j=0; j<nbPxToFill; j++)
+      this.pixels[0].push(0); 
+  }
+}
+
+class LongitudinalPattern extends Pattern {
+  constructor(palette, nbColors) {
+    super(palette);
+    this.nbColors = min(palette.length, nbColors);
+    this.xRandomnessVol = randomGaussian(0.011, 0.0006);
+    this.yRandomnessVol = randomGaussian(0.011, 0.0006);
+    this.maxShift = random(0.0, 1.3);
+    this.generatePattern();
+  }
+  
+  getPatternType() {
+    return 'Longitudinal';
+  }  
+  
+  generatePattern() {
+    if (this.nbColors>1) {
+      var idxPool = [];
+      for (var i = 1; i<this.nbColors; i++)
+        idxPool.push(int(random(1,this.nbColors)));
+      for (var i = 0; i<idxPool.length; i++) {
+        this.pixels.push([0]);
+        this.pixels.push([idxPool[i]]);        
+      }
+      for (var i = idxPool.length-2; i>=0; i--) {
+        this.pixels.push([0]);
+        this.pixels.push([idxPool[i]]);        
+      }
+      var squeezeNb = int(random(1, this.pixels.length));
+      for (var i = 0; i<squeezeNb; i++) {
+        this.pixels.push([0]);
+        this.pixels.unshift([0]);        
+      }
+    }
+    this.pixels.push([0]);
+  }
+}
+
+class StainsPattern extends Pattern {
+  constructor(palette, nbColors) {
+    super(palette);
+    this.nbColors = min(palette.length, nbColors);
+    this.xRandomnessVol = 0;
+    this.yRandomnessVol = 0;
+    this.maxShift = 0;
+    this.generatePattern();
+  }
+  
+  getPatternType() {
+    return 'Stains';
+  }  
+  
+  generatePattern() {
+    if (this.nbColors>1) {
+      var idxPool = [];
+      idxPool.push(0);
+      for (var i = 1; i<this.nbColors; i++)
+        idxPool.push(int(random(1,this.nbColors)));
+      var ixMax = 5000;
+      var iyMax = ixMax*2;
+      var noisVol = 0.000618;
+      var minNoise = min(noise(0, 0), noise(ixMax*noisVol, 0), noise(0, iyMax*noisVol), noise(ixMax*noisVol, iyMax*noisVol), noise(ixMax*noisVol/2, iyMax*noisVol/2));
+      var maxNoise = max(noise(0, 0), noise(ixMax*noisVol, 0), noise(0, iyMax*noisVol), noise(ixMax*noisVol, iyMax*noisVol), noise(ixMax*noisVol/2, iyMax*noisVol/2));
+      for (var ix = 0; ix < ixMax; ix++) {
+        var r = [];
+        for (var iy = 0; iy < iyMax; iy++) {
+          r.push(idxPool[int(max(0, min(this.nbColors - 1, (noise(ix*noisVol, iy*noisVol) - minNoise)/(maxNoise - minNoise)*this.nbColors)))]);
+        }
+        this.pixels.push(r);
+      }
+    } else this.pixels.push([0]);
+  }
+}
+
+const densityKeys = ['Imperceptible', 'Sparse', 'Balanced', 'Dense'];
+var spotsDensities = new p5.TypedDict();
+
+class SpotsPattern extends Pattern {
+  constructor(palette) {
+    super(palette);
+    this.nbColors = min(palette.length, 2);
+    this.spotsDensity = random(densityKeys);
+    this.initSpotsRefData();
+    this.generatePattern();
+  }
+  
+  getPatternType() {
+    return 'OrganizedSpots';
+  }
+  
+  initSpotsRefData() {
+    spotsDensities.create('Imperceptible', 39.9);
+    spotsDensities.create('Sparse', 8.8);
+    spotsDensities.create('Balanced', 2.6);
+    spotsDensities.create('Dense', 1.4);
+  }
+  
+  getSpotsDensity() {
+    return this.spotsDensity;
+  }
+
+
+  saveMicroParams() {
+    super.saveMicroParams();
+    saveParam('Micro', 'SpotsDensity', this.spotsDensity);
+  }
+  
+  generatePattern() {
+    if (this.nbColors>1) {
+      this.nbColors = 2;
+      var r = 1;
+      var rho = spotsDensities.get(this.spotsDensity);
+      var size = int(2*r*rho);
+      var colorIdx = int(random(1, this.palette.length));
+      for (var x = 0; x<size; x++) {
+        var ys = [];
+        for (var y = 0; y<size; y++) {
+          ys.push( pow(x-r, 2) + pow(y-r, 2) < r*r ? colorIdx : 0);
+        }
+        this.pixels.push(ys);
+      }
+    } else
+      this.pixels.push([0]);
+  }
+}
+
+class SpotsRandomPattern extends Pattern {
+  constructor(palette) {
+    super(palette);
+    this.nbColors = min(palette.length, 2);
+    this.spotsDensity = random(densityKeys);
+    this.initSpotsRefData();
+    this.generatePattern();
+  }
+  
+  getPatternType() {
+    return 'RandomSpots';
+  }
+  
+  initSpotsRefData() {
+    spotsDensities.create('Imperceptible', 0.0016);
+    spotsDensities.create('Sparse', 0.016);
+    spotsDensities.create('Balanced', 0.162);
+    spotsDensities.create('Dense', 0.382);
+  }
+  
+  getSpotsDensity() {
+    return this.spotsDensity;
+  }
+
+  saveMicroParams() {
+    super.saveMicroParams();
+    saveParam('Micro', 'SpotsDensity', this.spotsDensity);
+  }
+
+  generatePattern() {
+    if (this.nbColors>1) {
+      this.nbColors = int(random(2, this.nbColors));
+      var proba = spotsDensities.get(this.spotsDensity);
+      var size = 100;
+      for (var x = 0; x<size; x++) {
+        var ys = [];
+        for (var y = 0; y<size*2; y++) {
+          ys.push((random(0, 1) < proba) ? int(random(1, this.nbColors)) : 0);
+        }
+        this.pixels.push(ys);
+      }
+    } else
+      this.pixels.push([0]);
+  }
+}
+
+const automataType = ['Rectangular', 'Triangular'];
+const automataRulesets = [[1, 1, 0, 1], [1, 1, 1, 0], [1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1], [1, 0, 1, 0], [0, 1, 0, 1], [1, 0, 0, 1], [1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1], [1, 0, 1, 0], [1, 0, 0, 1]];
+
+class GeometricalPattern extends Pattern {
+  constructor(palette, nbColors) {
+    super(palette);
+    this.nbColors = min(palette.length, 2);
+    this.automataType = random(automataType);
+    this.ruleset = random(automataRulesets);
+    this.maxShift = max(0, randomGaussian(0.018, 1.018));
+    this.xRandomnessVol = randomGaussian(0.011, 0.0006);
+    this.yRandomnessVol = randomGaussian(0.011, 0.0006);
+    this.epochs = max(3, min(10, int(randomGaussian(6, 2))));;
+    this.generatePattern();
+    if (random(0, 1) < this.getColoredPixelsRatio() && this.getNbCorners() > 3) { 
+      this.smoothenPatternDirty();
+    }
+    if (random(0, 1) < this.getColoredPixelsRatio()/2 && this.getNbCorners() > 3) { 
+      this.smoothenPatternClean();
+    }
+  }
+  
+  getPatternType() {
+    return 'Geometrical';
+  }     
+  
+  getAutomataType() {
+    return this.automataType;
+  }
+  
+  getAutomataRuleset() {
+    return this.ruleset;
+  }  
+  
+  getAutomataEpochs() {
+    return this.epochs;
+  }    
+  
+  transitionRule(a, b, c) {
+    if (a == 1 && b == 1 && c == 1) return this.ruleset[0];
+    if (a == 1 && b == 1 && c == 0) return this.ruleset[1];
+    if (a == 1 && b == 0 && c == 1) return this.ruleset[1];
+    if (a == 1 && b == 0 && c == 0) return this.ruleset[2];
+    if (a == 0 && b == 1 && c == 1) return this.ruleset[1];
+    if (a == 0 && b == 1 && c == 0) return this.ruleset[2];
+    if (a == 0 && b == 0 && c == 1) return this.ruleset[2];
+    if (a == 0 && b == 0 && c == 0) return this.ruleset[3];
+    return 0;
+  }
+  
+  generatePattern() {
+    var size = max(33, min(99, int(randomGaussian(33, 11))));
+    var epochs = this.epochs;
+    var firstRow = [];
+    for (var i = 0; i<size; i+=2) {
+      if (i === size/2 + (size/2 - int(size/2)) || i === size/2 - (size/2 - int(size/2)) || i + 1 === size/2 + (size/2 - int(size/2)) || i + 1 === size/2 - (size/2 - int(size/2))) {
+        firstRow[i] = 1;
+        firstRow[i+1] = 1;
+      } else {
+        firstRow[i] = 0;
+        firstRow[i+1] = 0;
+      }
+    }
+    this.pixels.push(firstRow);
+    this.pixels.push(firstRow);
+    for (var e = 1; e<epochs; e++) {
+      var row = [];
+      for (var i = 0; i<size; i+=2) {      
+        var a = this.automataType === 'Rectangular' ? this.pixels[2*e - 1][i - 2 % size] : this.pixels[2*e - 1][i - 1 % size];
+        var b = this.automataType === 'Rectangular' ? this.pixels[2*e - 1][i % size] : this.pixels[2*e - 1][i + 1 % size];
+        var c = this.automataType === 'Rectangular' ? this.pixels[2*e - 1][i - 2 % size] : 0;
+        var res = this.transitionRule(a, b, c);
+        row[i] = res;
+        if (this.automataType === 'Rectangular' || e/2 === int(e/2)) {
+          row[i + 1] = res;
+        } else {
+          a = this.pixels[2*e - 1][i % size];
+          b = this.pixels[2*e - 1][i + 2 % size];
+          res = this.transitionRule(a, b, c);
+          row[i + 1] = res;
+        }
+      }
+      this.pixels.push(row);
+      this.pixels.push(row);
+    }
+    if (random(0, 1) < this.getColoredPixelsRatio()) {  
+      this.smoothenPatternDirty();
+    }
+    if (random(0, 1) < this.getColoredPixelsRatio()/4 && this.getNbCorners() > 10) {  
+      this.smoothenPatternClean();
+    }
+    for (var e = epochs; e>0; e--) {
+      var row = [];
+      for (var i = 0; i<size; i+=2) {
+        row[i] = this.pixels[(2*e-1)][i];
+        row[i+1] = this.pixels[(2*e-1) ][i+1];          
+      }
+      this.pixels.push(row);
+      this.pixels.push(row);
+    }
+    if (random(0, 1) > 0.5) {
+      var row = [];
+      for (var i = 0; i<size; i+=2) {
+        row[i] = 0;
+        row[i+1] = 0;
+      }
+      this.pixels.push(row);
+      this.pixels.push(row);
+      this.pixels.unshift(row);
+      this.pixels.unshift(row); 
+    }
+    if (random(0, 1) < this.getColoredPixelsRatio()) {  
+      this.smoothenPatternDirty();
+    }
+    if (random(0, 1) < this.getColoredPixelsRatio()/4) {  
+      this.smoothenPatternClean();
+    }     
+    var colorIdx = int(random(1, this.palette.length));
+    var colorIdx2 = int(random(1, this.palette.length));
+    colorIdx2 += (colorIdx2 === colorIdx) ? (colorIdx2 === 1) ? 1 : -1 : 0;  
+    var imax = this.pixels.length;
+    var jmax = this.pixels[0].length;
+    var insides = [];
+    for (var i = 0; i<imax; i++) {
+      insides.push([]);
+      for (var j = 0; j<jmax; j++) {
+        var val = this.pixels[i][j]===0 ? 0 : 1;
+        insides[i].push(val);
+      }
+    }
+    for (var i = 0; i<imax; i++) {
+      for (var j = 0; j<jmax; j++) {
+        if (insides[i][j] == 1) {
+          this.pixels[i][j] = colorIdx;
+        } else if (j > 0 && i > 0) {
+          if (insides[i][j - 1] == 0 || insides[i - 1][j] == 0) {
+            if (insides[i - 1][j] == 2) {
+              for (var ii = i - 1; ii > 0; ii--) {
+                if (insides[ii][j] == 2) {
+                  insides[ii][j] = 0;
+                  this.pixels[ii][j] = 0;
+                }
+                else
+                  break;
+              }
+            }
+            if (insides[i][j - 1] == 2) {
+              for (var jj = j - 1; jj > 0; jj--) {
+                if (insides[i][jj] == 2) {
+                  insides[i][jj] = 0;
+                  this.pixels[i][jj] = 0;
+                }
+                else
+                  break;
+              }
+            }
+            insides[i][j] = 0;
+            this.pixels[i][j] = 0
+            continue;
+          } else if (insides[i][j] == 1)
+            continue;
+          else if (insides[i][j - 1] == 2 || insides[i - 1][j] == 2) {
+            insides[i][j] = 2;
+            this.pixels[i][j] = colorIdx2;
+          } else if (insides[i][j - 1] === 1 || insides[i - 1][j] === 1) {
+            var changesUp = 0;
+            for (var jj = j - 1; jj > 0; jj--) {
+              if ((this.pixels[i][jj + 1] !== this.pixels[i][jj]) && (this.pixels[i][jj + 1]*this.pixels[i][jj] === 0)) {
+                changesUp++;
+                break;
+              }
+            }
+            if (changesUp === 0) {
+              if (insides[i - 1][j] == 2) {
+                for (var ii = i - 1; ii > 0; ii--) {
+                  if (insides[ii][j] == 2) {
+                    insides[ii][j] = 0;
+                    this.pixels[ii][j] = 0;
+                  }
+                  else 
+                    break;
+                }
+              }
+              continue;   
+            }
+            var changesDown = 0;
+            for (var jj = j + 1; jj < jmax; jj++) {
+              if ((this.pixels[i][jj - 1] !== this.pixels[i][jj]) && (this.pixels[i][jj - 1]*this.pixels[i][jj] === 0)) {
+                changesDown++;
+                break;
+              }
+            }      
+            if (changesDown === 0) {
+              if (insides[i - 1][j] == 2) {
+                for (var ii = i - 1; ii > 0; ii--) {
+                  if (insides[ii][j] == 2) {
+                    insides[ii][j] = 0;
+                    this.pixels[ii][j] = 0;
+                  }
+                  else
+                    break;
+                }
+              }
+              continue;   
+            }
+            var changesLeft = 0;
+            for (var ii = i - 1; ii > 0; ii--) {
+              if ((this.pixels[ii + 1][j] !== this.pixels[ii][j]) && (this.pixels[ii + 1][j]*this.pixels[ii][j] === 0)) {
+                changesLeft++;
+                break;
+              }
+            }
+            if (changesLeft === 0) {
+              if (insides[i][j - 1] == 2) {
+                for (var jj = j - 1; jj > 0; jj--) {
+                  if (insides[i][jj] == 2) {
+                    insides[i][jj] = 0;
+                    this.pixels[i][jj] = 0;
+                  }
+                  else
+                    break;
+                }
+              }              
+              continue;
+            }
+            var changesRight = 0;
+            for (var ii = i + 1; ii < imax; ii++) {
+              if ((this.pixels[ii - 1][j] !== this.pixels[ii][j]) && (this.pixels[ii - 1][j]*this.pixels[ii][j] === 0)) {
+                changesRight++;
+                break;
+              }
+            }      
+            if (changesRight === 0) {
+              if (insides[i][j - 1] == 2) {
+                for (var jj = j - 1; jj > 0; jj--) {
+                  if (insides[i][jj] == 2) {
+                    insides[i][jj] = 0;
+                    this.pixels[i][jj] = 0;
+                  }
+                  else
+                    break;
+                }
+              }              
+              continue;
+            }
+            insides[i][j] = 2;
+            this.pixels[i][j] = colorIdx2;
+          }
+        }
+      }    
+    }
+    if (this.getColoredPixelsRatio() > 0.009 && random(0, 1) < max(0.15, 2*this.getColoredPixelsRatio()) && this.getNbCorners() > 3) {  
+      this.smoothenPatternDirty();
+      if (this.getColoredPixelsRatio() > 0.009 && random(0, 1) < 2*this.getColoredPixelsRatio() && this.getNbCorners() > 3) { 
+        this.smoothenPatternDirty();
+      }
+    }
+    if (this.getColoredPixelsRatio() > 0.009 && random(0, 1) < this.getColoredPixelsRatio() && this.getNbCorners() > 9) { 
+      this.smoothenPatternClean();
+      if (this.getColoredPixelsRatio() > 0.009 && random(0, 1) < this.getColoredPixelsRatio() && this.getNbCorners() > 9) { 
+        this.smoothenPatternClean();
+      }   
+    }
+  }
+}
+
+class Render {
+  constructor(xRandomnessVol, yRandomnessVol) {
+    this.xRandomnessVol = xRandomnessVol;
+    this.yRandomnessVol = yRandomnessVol;
+    this.noiseSensi = randomGaussian(0.0016, 0.00016);
+    this.scaleMissingRatio = random(0, 1) < 0.5 ? 0 : random(0, 1) < 0.8 ? int(random(0, 0.75)*10)/10 : int(random(0.75, 1.1)*10)/10;
+    this.scaleNbVertices = random(0, 1) < 0.01 ? 3 : int(random(4, 9));
+    this.scaleSize = max(0.1, randomGaussian(0.8, 0.8*0.618/3));
+  }
+  
+  saveMicroParams() {
+    saveParam('Micro', 'RenderNoiseSensi', this.noiseSensi);
+    saveParam('Micro', 'RenderScalesPresence', this.addScales);
+    saveParam('Micro', 'RenderScalesNbVertices', this.scaleNbVertices);
+    saveParam('Micro', 'RenderScalesSize', this.scaleSize);
+    saveParam('Micro', 'RenderScalesMissingRatio', this.scaleMissingRatio);
+    saveParam('Micro', 'RenderRandomVolHorizontal', this.xRandomnessVol);
+    saveParam('Micro', 'RenderRandomVolVertical', this.yRandomnessVol);   
+  }
+}
+
+class EllipseRender extends Render {
+  constructor(xRandomnessVol, yRandomnessVol) {
+    super(xRandomnessVol, yRandomnessVol);
+    this.addScales = random(0, 1) > 0.15;
+  }
+  
+  render(fillColor, strokeColor, x, y, pxw, pxh, extraDirectionalNoise) {
+    if (strokeColor)
+      stroke(strokeColor);
+    else
+      noStroke();
+    fill(fillColor);
+    var shiftFactor = randomGaussian(666, 66) + extraDirectionalNoise;
+    var xDev = x + randomGaussian(0, this.xRandomnessVol*pxw) + shiftFactor*this.xRandomnessVol*(noise(x*this.noiseSensi, y*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height)));
+    var yDev = y + randomGaussian(0, this.yRandomnessVol*pxh) + shiftFactor*this.yRandomnessVol*(noise(y*this.noiseSensi, x*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height))); 
+    var pxwDev = pxw/2*1.6 + randomGaussian(0, this.xRandomnessVol*pxw*2);
+    var pxhDev = pxh/2*1.6 + randomGaussian(0, this.yRandomnessVol*pxh);
+    ellipse(xDev, yDev, pxwDev, pxhDev);
+    if (this.addScales) {
+      var newStrokeColor = color(hue(fillColor), (brightness(fillColor) < 40) ? (0.44*sqrt(saturation(fillColor))) : min(91, 1.234*saturation(fillColor)), min(90, ((brightness(fillColor) < 40) ? 4 : 0.44) * brightness(fillColor)), alpha(fillColor)*0.555);
+      stroke(newStrokeColor);
+      strokeWeight(width/515 + randomGaussian(0, 0.5));
+      var lowAlphaFillColor = color(hue(fillColor), saturation(fillColor), brightness(fillColor), alpha(fillColor)*0.789);
+      fill(lowAlphaFillColor);
+      beginShape();
+      var scqleSize = this.scaleSize;
+      var initAngle = PI/2;
+      if (random(0, 1) > this.scaleMissingRatio) {
+        for (var  angle = initAngle ; angle < initAngle +2*PI; angle = angle + 2*PI/this.scaleNbVertices) {
+          vertex(x + shiftFactor*this.xRandomnessVol*(noise(x*this.noiseSensi, y*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height))) + cos(angle)*scqleSize*pxw, y  + shiftFactor*this.yRandomnessVol*(noise(y*this.noiseSensi, x*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height))) + sin(angle)*scqleSize*pxh);
+        }
+      } else {
+        for (var  angle = initAngle ; angle < initAngle +2*PI; angle = angle + 2*PI/this.scaleNbVertices) {
+          vertex(x + shiftFactor*this.xRandomnessVol*(noise(x*this.noiseSensi, y*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height))) + cos(angle)*scqleSize*pxw, y  + shiftFactor*this.yRandomnessVol*(noise(y*this.noiseSensi, x*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height))) + cos(angle)*scqleSize*pxh);
+        }
+      }
+      endShape();
+    } else {
+        var angle = -PI/2 + PI*noise(x/width/3, y/height/4);
+        var angleLeft = angle - PI*0.2;
+        var angleRight = angle + PI*0.2;
+        var r = 0.7*sqrt(pow(pxwDev/2*cos(angle), 2) + pow(pxhDev/2*sin(angle), 2));
+        var rLeft = 0.7*sqrt(pow(pxwDev/2*cos(angleLeft), 2) + pow(pxhDev/2*sin(angleLeft), 2));
+        var rRight = 0.7*sqrt(pow(pxwDev/2*cos(angleRight), 2) + pow(pxhDev/2*sin(angleRight), 2));
+        push();
+        strokeWeight((pxw + pxh)/15.5);
+        stroke(hue(fillColor), 0.333*saturation(fillColor), 33 + 0.67*brightness(fillColor), 0.44 + 0.44*noise(x/5/width, y/44/height));
+        line(xDev + 0.8*cos(angleLeft)*rLeft, yDev + 0.8*sin(angleLeft)*rLeft, xDev + 0.8*cos(angle)*r, yDev + 0.8*sin(angle)*r);
+        line(xDev + 0.8*cos(angleRight)*rRight, yDev + 0.8*sin(angleRight)*rRight, xDev + 0.8*cos(angle)*r, yDev + 0.8*sin(angle)*r);
+        stroke(hue(fillColor), 0.162*saturation(fillColor), 55 + 0.45*brightness(fillColor), 0.51 + 0.44*noise(x/5/width, y/44/height));
+        line(xDev + 0.7*cos(angleLeft)*rLeft, yDev + 0.7*sin(angleLeft)*rLeft, xDev + 0.7*cos(angle)*r, yDev + 0.7*sin(angle)*r);
+        line(xDev + 0.7*cos(angleRight)*rRight, yDev + 0.7*sin(angleRight)*rRight, xDev + 0.7*cos(angle)*r, yDev + 0.7*sin(angle)*r);
+        pop();
+    }
+  }
+}
+
+class CycloidRender extends Render {
+  constructor(xRandomnessVol, yRandomnessVol) {
+    super(xRandomnessVol, yRandomnessVol);
+    this.scaleMissingRatio = min(1, max(0, int(randomGaussian(0, 3))/10));
+    this.addScales = random(0, 1) > 0.15;
+  }
+  
+  render(fillColor, strokeColor, x, y, pxw, pxh, extraDirectionalNoise) {
+    if (strokeColor)
+      stroke(strokeColor);
+    else
+      noStroke();
+    fill(fillColor);
+    var scqleSize = 1.2;
+    var shiftFactor = randomGaussian(666, 66) + extraDirectionalNoise;
+    beginShape();
+    for (let angle = 0; angle <= TWO_PI*2; angle = angle + PI*0.25) {
+      let r = scqleSize*noise(x + y, x + cos(angle) + 1, y + sin(angle) + 1)*sqrt(pow(pxw/2*cos(angle), 2) + pow(pxh/2*sin(angle), 2));
+      let xrDev = randomGaussian(0, this.xRandomnessVol*pxw) + shiftFactor*this.xRandomnessVol*(noise(x*this.noiseSensi, y*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height)));
+      let xpos = x + xrDev + cos(angle)*r;
+      let yrDev = randomGaussian(0, this.yRandomnessVol*pxh) + shiftFactor*this.yRandomnessVol*(noise(y*this.noiseSensi, x*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height)));
+      let ypos = y + yrDev + sin(angle)*r;
+      curveVertex(xpos, ypos);             
+      endShape();
+      if(angle > TWO_PI*1.6 && !this.addScales) {
+        push();
+        strokeWeight(width/509);
+        stroke(hue(fillColor), 0.333*saturation(fillColor), 33 + 0.67*brightness(fillColor), 0.44 + 0.44*noise(x/5/width, y/100/height));
+        line(x + xrDev + 0.9*cos(angle - PI*0.25)*r, y + yrDev + 0.9*sin(angle - PI*0.25)*r, x + xrDev + 0.9*cos(angle)*r, y + yrDev + 0.9*sin(angle)*r);
+        line(x + xrDev + 0.9*cos(angle + PI*0.25)*r, y + yrDev + 0.9*sin(angle + PI*0.25)*r, x + xrDev + 0.9*cos(angle)*r, y + yrDev + 0.9*sin(angle)*r);
+        stroke(hue(fillColor), 0.162*saturation(fillColor), 55 + 0.45*brightness(fillColor), 0.51 + 0.44*noise(x/5/width, y/100/height));
+        line(x + xrDev + 0.8*cos(angle - PI*0.2)*r, y + yrDev + 0.8*sin(angle - PI*0.2)*r, x + xrDev + 0.8*cos(angle)*r, y + yrDev + 0.8*sin(angle)*r);
+        line(x + xrDev + 0.8*cos(angle + PI*0.2)*r, y + yrDev + 0.8*sin(angle + PI*0.2)*r, x + xrDev + 0.8*cos(angle)*r, y + yrDev + 0.8*sin(angle)*r);
+        pop();
+      }
+    }
+    if (this.addScales) {
+      var newStrokeColor = color(hue(fillColor), min(91, 1.234*saturation(fillColor)), min(90, 0.44*brightness(fillColor)), alpha(fillColor)*0.555);
+      stroke(newStrokeColor);
+      strokeWeight(width/515 + randomGaussian(0, 0.5));
+      var lowAlphaFillColor = color(hue(fillColor), saturation(fillColor), brightness(fillColor), alpha(fillColor)*0.789);
+      fill(lowAlphaFillColor);
+      beginShape();
+      scqleSize = this.scaleSize;
+      var initAngle = PI/2;
+      if (random(0, 1.1) > this.scaleMissingRatio) {
+        for (var  angle = initAngle ; angle < initAngle +2*PI; angle = angle + 2*PI/this.scaleNbVertices) {
+          vertex(x + shiftFactor*this.xRandomnessVol*(noise(x*this.noiseSensi, y*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height))) + cos(angle)*scqleSize*pxw, y  + shiftFactor*this.yRandomnessVol*(noise(y*this.noiseSensi, x*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height))) + sin(angle)*scqleSize*pxh);
+        }
+      } else {
+        for (var  angle = initAngle ; angle < initAngle +2*PI; angle = angle + 2*PI/this.scaleNbVertices) {
+          vertex(x + shiftFactor*this.xRandomnessVol*(noise(x*this.noiseSensi, y*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height))) + cos(angle)*scqleSize*pxw, y  + shiftFactor*this.yRandomnessVol*(noise(y*this.noiseSensi, x*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height))) + cos(angle)*scqleSize*pxh);
+        }
+      }
+      endShape();
+    }
+  }
+}
+
+class GaussianScribblerRender extends Render {
+  constructor(xRandomnessVol, yRandomnessVol) {
+    super(xRandomnessVol, yRandomnessVol);
+    this.addScales = true;
+  }
+  
+  render(fillColor, strokeColor, x, y, pxw, pxh, extraDirectionalNoise) {
+    var nbStrokes = int(random(3,8));
+    var nbstep = 100/nbStrokes;
+    noStroke();
+    var lowAlphaFillColor = color(hue(fillColor), saturation(fillColor), brightness(fillColor), alpha(fillColor)*0.666);
+    fill(lowAlphaFillColor);
+    var scqleSize = 1.2;
+    var shiftFactor = randomGaussian(666, 66) + extraDirectionalNoise;
+    for (var i = 0; i < nbstep; i++) {
+      beginShape();
+      for (var  angle = 0 ; angle < 2*PI; angle = angle + 2*PI/nbStrokes) {
+        let r = noise(x + y, x + cos(angle) + 1, y + sin(angle) + 1)*sqrt(pow(pxw/2*cos(angle), 2) + pow(pxh/2*sin(angle), 2));
+        let xrDev = randomGaussian(0, width/161.8) + shiftFactor*this.xRandomnessVol*(noise(x*this.noiseSensi, y*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height)));
+        let xpos = x + xrDev + cos(angle)*r;
+        let yrDev = randomGaussian(0, height/161.8) + shiftFactor*this.yRandomnessVol*(noise(y*this.noiseSensi, x*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height)));
+        let ypos = y + yrDev + sin(angle)*r;
+        curveVertex(xpos, ypos);             
+      }
+      endShape();    
+    }
+    var newStrokeColor = color(hue(fillColor), (brightness(fillColor) < 40) ? (0.44*sqrt(saturation(fillColor))) : min(91, 1.234*saturation(fillColor)), min(90, ((brightness(fillColor) < 40) ? 4 : 0.44) * brightness(fillColor)), alpha(fillColor)*0.555);
+    stroke(newStrokeColor);
+    strokeWeight(width/500 + randomGaussian(0, 0.5));
+    lowAlphaFillColor = color(hue(fillColor), saturation(fillColor), brightness(fillColor), alpha(fillColor)*0.789);
+    fill(lowAlphaFillColor);
+    beginShape();
+    scqleSize = this.scaleSize;
+    var initAngle = -PI/2;
+    if (random(0, 1) > this.scaleMissingRatio) {
+      for (var angle = initAngle ; angle < initAngle +2*PI; angle = angle + 2*PI/this.scaleNbVertices) {
+        vertex(x + shiftFactor*this.xRandomnessVol*(noise(x*this.noiseSensi, y*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height))) + cos(angle)*scqleSize*pxw, y  + shiftFactor*this.yRandomnessVol*(noise(y*this.noiseSensi, x*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height))) + sin(angle)*scqleSize*pxh);
+      }
+    } else {
+      for (var angle = initAngle ; angle < initAngle +2*PI; angle = angle + 2*PI/this.scaleNbVertices) {
+        vertex(x + shiftFactor*this.xRandomnessVol*(noise(x*this.noiseSensi, y*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height))) + cos(angle)*scqleSize*pxw, y  + shiftFactor*this.yRandomnessVol*(noise(y*this.noiseSensi, x*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height))) + cos(angle)*scqleSize*pxh);
+      }
+    }
+    endShape();
+  }
+}
+
+class GaussianSprinklerRender extends Render {
+  constructor(xRandomnessVol, yRandomnessVol) {
+    super(xRandomnessVol, yRandomnessVol);
+    this.addScales = true;
+  }
+  
+  render(fillColor, strokeColor, x, y, pxw, pxh, extraDirectionalNoise) {
+    var nbstep = 99*pxw/13;
+    noStroke();
+    var lowAlphaFillColor = color(hue(fillColor), saturation(fillColor), brightness(fillColor), alpha(fillColor)*0.666);
+    fill(lowAlphaFillColor);
+    var shiftFactor = randomGaussian(666, 66) + extraDirectionalNoise;
+    for (var i = 0 ; i < nbstep; i++) {
+      ellipse(x + randomGaussian(0, width/161.8) + shiftFactor*this.xRandomnessVol*(noise(x*this.noiseSensi, y*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height))), y + randomGaussian(0, height/161.8) + shiftFactor*this.yRandomnessVol*(noise(y*this.noiseSensi, x*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height))), sqrt(sqrt(pxw)) + randomGaussian(0, this.xRandomnessVol*pxw), sqrt(sqrt(pxh)) + randomGaussian(0, this.yRandomnessVol*pxh));
+    }
+    var newStrokeColor = color(hue(fillColor), (brightness(fillColor) < 40) ? (0.44*sqrt(saturation(fillColor))) : min(91, 1.234*saturation(fillColor)), min(90, ((brightness(fillColor) < 40) ? 4 : 0.44) * brightness(fillColor)), alpha(fillColor)*0.555);
+    stroke(newStrokeColor);
+    strokeWeight(width/500 + randomGaussian(0, 0.5));
+    lowAlphaFillColor = color(hue(fillColor), saturation(fillColor), brightness(fillColor), alpha(fillColor)*0.789);
+    fill(lowAlphaFillColor);
+    beginShape();
+    var scqleSize = this.scaleSize;
+    var initAngle = -PI/2;
+    if (random(0, 1) > this.scaleMissingRatio) {
+      for (var  angle = initAngle ; angle < initAngle +2*PI; angle = angle + 2*PI/this.scaleNbVertices) {
+        vertex(x + shiftFactor*this.xRandomnessVol*(noise(x*this.noiseSensi, y*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height))) + cos(angle)*scqleSize*pxw, y  + shiftFactor*this.yRandomnessVol*(noise(y*this.noiseSensi, x*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height))) + sin(angle)*scqleSize*pxh);
+      }
+    } else {
+      for (var  angle = initAngle ; angle < initAngle +2*PI; angle = angle + 2*PI/this.scaleNbVertices) {
+        vertex(x + shiftFactor*this.xRandomnessVol*(noise(x*this.noiseSensi, y*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height))) + cos(angle)*scqleSize*pxw, y  + shiftFactor*this.yRandomnessVol*(noise(y*this.noiseSensi, x*this.noiseSensi) - max(noise(0, 0), noise(width, 0), noise(0, height), noise(width, height))) + cos(angle)*scqleSize*pxh);
+      }
+    }
+    endShape();
+  }
+}
+	 </script>
+  </body>
+</html>
